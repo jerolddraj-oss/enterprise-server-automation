@@ -1,0 +1,8 @@
+---
+- name: Verify managed target responds to Ansible
+  ansible.builtin.ping:
+  changed_when: false
+
+- name: Report compliance role status
+  ansible.builtin.debug:
+    msg: "Connectivity validation passed. Add organization-approved compliance controls before production use."
