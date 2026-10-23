@@ -1,28 +1,8 @@
 ---
-- name: Apply minimal baseline to explicitly supplied Windows hosts
+- name: Apply baseline to explicitly supplied Windows hosts
   hosts: provisioned_windows
   gather_facts: false
   serial: 10
-  tasks:
-    - name: Ensure Windows Time service is enabled and running
-      ansible.windows.win_service:
-        name: W32Time
-        start_mode: auto
-        state: started
 
-    - name: Assert Windows Firewall profiles are enabled
-      ansible.windows.win_powershell:
-        script: |
-          $profiles = Get-NetFirewallProfile
-          $disabled = @($profiles | Where-Object { -not $_.Enabled })
-          if ($disabled.Count -gt 0) {
-            $names = ($disabled | ForEach-Object { $_.Name }) -join ', '
-            throw "Firewall is disabled for profiles: $names"
-          }
-          $Ansible.Result = @{ profiles_checked = $profiles.Count; enabled = $true }
-          $Ansible.Changed = $false
-      register: firewall_check
-
-    - name: Show baseline validation result
-      ansible.builtin.debug:
-        var: firewall_check.result
+  roles:
+    - windows_baseline
