@@ -1,0 +1,11 @@
+---
+- name: Ensure a time synchronization package is installed
+  ansible.builtin.package:
+    name: chrony
+    state: present
+
+- name: Enable chronyd service on common Linux distributions
+  ansible.builtin.service:
+    name: "{{ 'chrony' if ansible_os_family == 'Debian' else 'chronyd' }}"
+    state: started
+    enabled: true
