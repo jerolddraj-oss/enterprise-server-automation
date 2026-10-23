@@ -1,0 +1,26 @@
+---
+- name: Require explicit domain and OU variables
+  ansible.builtin.assert:
+    that:
+      - domain_join_enabled | default(false) | bool
+      - domain_name is defined
+      - domain_ou is defined
+      - domain_join_user is defined
+      - domain_join_password is defined
+    fail_msg: "Domain join requires explicit request approval, domain/OU, and secret-store-provided credentials."
+  no_log: true
+
+- name: Join Windows server to Active Directory
+  ansible.windows.win_domain_membership:
+    dns_domain_name: "{{ domain_name }}"
+    domain_ou_path: "{{ domain_ou }}"
+    domain_admin_user: "{{ domain_join_user }}"
+    domain_admin_password: "{{ domain_join_password }}"
+    state: domain
+  register: domain_join_result
+  no_log: true
+
+- name: Reboot if domain membership changed
+  ansible.windows.win_reboot:
+    reboot_timeout: 1800
+  when: domain_join_result.reboot_required | default(false)
