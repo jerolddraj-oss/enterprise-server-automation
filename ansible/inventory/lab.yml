@@ -1,0 +1,7 @@
+---
+all:
+  children:
+    provisioned_linux:
+      hosts: {}
+    provisioned_windows:
+      hosts: {}
