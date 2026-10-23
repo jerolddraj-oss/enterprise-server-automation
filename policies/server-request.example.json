@@ -1,0 +1,18 @@
+{
+  "request_id": "REQ-DEMO-001",
+  "hostname": "lab-win-001",
+  "os_type": "windows",
+  "environment": "development",
+  "cpu": 2,
+  "memory_gb": 8,
+  "disk_gb": 100,
+  "owner": "Example Application Team",
+  "application": "SampleApp",
+  "network_zone": "app",
+  "domain_join": false,
+  "approval_status": "pending",
+  "platform": "vmware",
+  "metadata": {
+    "purpose": "synthetic validation example only"
+  }
+}
