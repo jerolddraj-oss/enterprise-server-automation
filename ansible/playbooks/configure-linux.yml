@@ -4,14 +4,13 @@
   become: true
   gather_facts: true
   serial: 10
-  tasks:
+  pre_tasks:
     - name: Require Linux targets
       ansible.builtin.assert:
         that:
           - ansible_system == "Linux"
         fail_msg: "This playbook is intended for Linux hosts only."
       changed_when: false
-
   roles:
     - common_baseline
     - linux_baseline
