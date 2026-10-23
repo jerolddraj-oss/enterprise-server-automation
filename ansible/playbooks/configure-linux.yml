@@ -1,0 +1,44 @@
+---
+- name: Apply baseline to explicitly supplied Linux hosts
+  hosts: provisioned_linux
+  become: true
+  gather_facts: true
+  serial: 10
+  tasks:
+    - name: Require supported Linux family
+      ansible.builtin.assert:
+        that:
+          - ansible_system == "Linux"
+        fail_msg: "This playbook is intended for Linux hosts only."
+
+    - name: Ensure time synchronization package is present on Debian-family systems
+      ansible.builtin.apt:
+        name: chrony
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure time synchronization package is present on RedHat-family systems
+      ansible.builtin.package:
+        name: chrony
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Enable chrony where the service exists
+      ansible.builtin.service:
+        name: chrony
+        state: started
+        enabled: true
+      when: ansible_os_family == "Debian"
+
+    - name: Enable chronyd on RedHat-family systems
+      ansible.builtin.service:
+        name: chronyd
+        state: started
+        enabled: true
+      when: ansible_os_family == "RedHat"
+
+    - name: Report minimal baseline status
+      ansible.builtin.debug:
+        msg: "Basic time-service configuration completed. Apply organization-specific security roles before production use."
