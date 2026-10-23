@@ -1,0 +1,11 @@
+---
+- name: Require hostname to be defined
+  ansible.builtin.assert:
+    that:
+      - ansible_hostname is defined
+      - ansible_hostname | length > 0
+    fail_msg: "Ansible could not determine the target hostname."
+
+- name: Report common baseline validation
+  ansible.builtin.debug:
+    msg: "Common baseline precondition passed for {{ inventory_hostname }}."
