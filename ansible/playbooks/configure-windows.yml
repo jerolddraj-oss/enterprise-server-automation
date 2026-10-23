@@ -3,6 +3,6 @@
   hosts: provisioned_windows
   gather_facts: false
   serial: 10
-
   roles:
     - windows_baseline
+    - compliance_validation
