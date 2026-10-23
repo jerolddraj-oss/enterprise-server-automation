@@ -1,0 +1,10 @@
+---
+- name: Require organization-specific monitoring adapter
+  ansible.builtin.assert:
+    that:
+      - monitoring_adapter_configured | default(false) | bool
+    fail_msg: "Monitoring agent deployment is not configured. Implement the vendor-specific role before using this role."
+
+- name: Report monitoring adapter is configured
+  ansible.builtin.debug:
+    msg: "Monitoring adapter configuration flag is set; add vendor-specific install and health checks."
