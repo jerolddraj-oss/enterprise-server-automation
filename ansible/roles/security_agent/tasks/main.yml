@@ -1,0 +1,10 @@
+---
+- name: Require organization-specific security adapter
+  ansible.builtin.assert:
+    that:
+      - security_adapter_configured | default(false) | bool
+    fail_msg: "Endpoint security integration is not configured. Implement the vendor-specific role before using this role."
+
+- name: Report security adapter is configured
+  ansible.builtin.debug:
+    msg: "Security adapter configuration flag is set; add vendor-specific installation and healthy-registration checks."
