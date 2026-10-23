@@ -1,0 +1,82 @@
+/*
+ * Jenkins orchestration starter.
+ * Provisioning is intentionally gated until explicit environment parameters
+ * and adapter implementation are configured. Do not store secrets in this file.
+ */
+pipeline {
+    agent { label 'infra-automation' }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        timeout(time: 60, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+    }
+
+    parameters {
+        string(name: 'REQUEST_FILE', defaultValue: 'policies/server-request.example.json',
+               description: 'Repository-relative JSON request file; use a secured upstream integration in production.')
+        choice(name: 'ACTION', choices: ['validate-only', 'provision-lab'],
+               description: 'provision-lab remains blocked until the deployment gate is explicitly enabled.')
+        booleanParam(name: 'ENABLE_LAB_PROVISIONING', defaultValue: false,
+                     description: 'Must only be enabled after adapters and lab controls are reviewed.')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+
+        stage('Validate Request') {
+            steps {
+                sh '''
+                    set -eu
+                    python3 -m venv .venv
+                    . .venv/bin/activate
+                    python -m pip install --disable-pip-version-check -r requirements-dev.txt
+                    python -m python.validate_request "$REQUEST_FILE"
+                '''
+            }
+        }
+
+        stage('Static Validation') {
+            steps {
+                sh '''
+                    set -eu
+                    . .venv/bin/activate
+                    python -m pytest -q
+                    python - <<'PY'
+                    from pathlib import Path
+                    import yaml
+                    for p in list(Path('.').rglob('*.yml')) + list(Path('.').rglob('*.yaml')):
+                        if '.git' in p.parts or '.venv' in p.parts:
+                            continue
+                        with p.open(encoding='utf-8') as f:
+                            list(yaml.safe_load_all(f))
+                        print('YAML OK:', p)
+                    PY
+                '''
+            }
+        }
+
+        stage('Provisioning Gate') {
+            when { expression { params.ACTION == 'provision-lab' } }
+            steps {
+                script {
+                    if (!params.ENABLE_LAB_PROVISIONING) {
+                        error('Provisioning is blocked. Complete adapter configuration, credential setup, lab testing, approvals, and review before enabling this gate.')
+                    }
+                    error('No platform adapter is enabled in this starter. Implement and test the selected adapter before removing this fail-safe.')
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'reports/**,logs/**', allowEmptyArchive: true
+        }
+        success { echo 'Validation pipeline completed.' }
+        failure { echo 'Pipeline failed. Review stage logs; no infrastructure provisioning is enabled by this starter.' }
+    }
+}
