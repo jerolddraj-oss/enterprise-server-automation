@@ -1,0 +1,10 @@
+---
+- name: Require organization-specific backup adapter
+  ansible.builtin.assert:
+    that:
+      - backup_adapter_configured | default(false) | bool
+    fail_msg: "Backup integration is not configured. Implement the vendor-specific role before using this role."
+
+- name: Report backup adapter is configured
+  ansible.builtin.debug:
+    msg: "Backup adapter configuration flag is set; add vendor-specific install, policy assignment and health checks."
